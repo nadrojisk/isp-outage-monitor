@@ -1,0 +1,11 @@
+version: "2.4"
+services:
+  isp_monitor:
+    build: .
+    volumes:
+      - ./database:/usr/src/app/database
+    ports:
+      - "80:8080"
+    container_name: isp_monitor
+    restart: always
+
