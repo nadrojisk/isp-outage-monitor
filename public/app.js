@@ -52,7 +52,7 @@
                 $.each(outages, function(index, outage){
 
                     var date = new Date(outage.begin);
-                    var datestring = date.toLocaleString('de-DE');
+                    var datestring = date.toLocaleString();
 
                     var duration = outage.end - outage.begin;
 
