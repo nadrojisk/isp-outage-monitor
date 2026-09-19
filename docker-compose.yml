@@ -1,11 +1,11 @@
-version: "2.4"
+# Local development / try-it-out setup. Deployment (hostname, reverse proxy, image tag)
+# lives outside this repo; released images are published to ghcr.io/nadrojisk/isp-outage-monitor.
 services:
   isp_monitor:
     build: .
     volumes:
       - ./database:/usr/src/app/database
     ports:
-      - "80:8080"
+      - "8080:8080"
     container_name: isp_monitor
     restart: always
-
