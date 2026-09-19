@@ -23,3 +23,13 @@ Run the script in the background by:
 ```bash
 nohup node .
 ```
+
+## Docker
+
+```bash
+docker compose up --build   # then open http://localhost:8080
+```
+
+Released images are published to `ghcr.io/nadrojisk/isp-outage-monitor`. To cut a release, tag the commit
+on `master` (`git tag v1.0.1 && git push origin v1.0.1`); the *Publish image* workflow builds and pushes
+`1.0.1` and `1.0`. Outage data lives in `/usr/src/app/database`; mount a volume there to keep it.
