@@ -23,9 +23,11 @@ var _outage = null;
 var online = false;
 var firstCheck = true;
 
-// LOGGING: one line per event on stdout, so `docker logs` and log collectors (Loki) see outages as they happen
-function log(message){
-    console.log(new Date().toISOString() + ' ' + message);
+// LOGGING: one JSON object per line on stdout, so `docker logs` and log collectors (Loki) see outages as they happen
+function log(level, message, fields){
+    var entry = { time: new Date().toISOString(), level: level, msg: message };
+    for(var key in fields){ entry[key] = fields[key]; }
+    console.log(JSON.stringify(entry));
 }
 
 // INITIALISE THE DATABASE
@@ -43,7 +45,7 @@ setInterval(function(){
         if(firstCheck){
             firstCheck = false;
             if(isAlive){
-                log('INFO connection check running: online');
+                log('info', 'connection check running: online', { event: 'check_online' });
             }
         }
 
@@ -53,7 +55,7 @@ setInterval(function(){
             _outage = {
                 begin: + new Date()
             };
-            log('OUTAGE began: no reply from google.com');
+            log('warn', 'outage began: no reply from google.com', { event: 'outage_began', target: 'google.com' });
 
         }else if(!isAlive && _outage){
 
@@ -63,12 +65,13 @@ setInterval(function(){
 
             // the outage has ended
             _outage.end = + new Date();
-            log('OUTAGE ended after ' + Math.round((_outage.end - _outage.begin) / 1000) + 's');
+            var seconds = Math.round((_outage.end - _outage.begin) / 1000);
+            log('warn', 'outage ended after ' + seconds + 's', { event: 'outage_ended', duration_s: seconds });
 
             // insert the outage to the database
             outageCollection.insert(_outage, function(err, result){
                 if (err){
-                    log('ERROR could not save the outage: ' + err);
+                    log('error', 'could not save the outage: ' + err, { event: 'save_failed' });
                     throw err;
                 }
             });
@@ -115,5 +118,5 @@ app.get('/', function(req, res) {
 app.use(express.static('public'));
 
 app.listen(port, function () {
-    log('INFO ISP logger is running on port ' + port + ', checking google.com every ' + (checkInterval / 1000) + 's');
+    log('info', 'ISP logger is running', { event: 'started', port: port, target: 'google.com', interval_s: checkInterval / 1000 });
 });
