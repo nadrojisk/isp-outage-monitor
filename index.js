@@ -21,6 +21,12 @@ var limit = 10;            // api limit per page
 var app = express();
 var _outage = null;
 var online = false;
+var firstCheck = true;
+
+// LOGGING: one line per event on stdout, so `docker logs` and log collectors (Loki) see outages as they happen
+function log(message){
+    console.log(new Date().toISOString() + ' ' + message);
+}
 
 // INITIALISE THE DATABASE
 var Engine = require('tingodb')();
@@ -34,12 +40,20 @@ setInterval(function(){
 
         online = isAlive;
 
+        if(firstCheck){
+            firstCheck = false;
+            if(isAlive){
+                log('INFO connection check running: online');
+            }
+        }
+
         if(!isAlive && !_outage){
 
             // new outage detected
             _outage = {
                 begin: + new Date()
             };
+            log('OUTAGE began: no reply from google.com');
 
         }else if(!isAlive && _outage){
 
@@ -49,10 +63,14 @@ setInterval(function(){
 
             // the outage has ended
             _outage.end = + new Date();
+            log('OUTAGE ended after ' + Math.round((_outage.end - _outage.begin) / 1000) + 's');
 
             // insert the outage to the database
             outageCollection.insert(_outage, function(err, result){
-                if (err) throw err;
+                if (err){
+                    log('ERROR could not save the outage: ' + err);
+                    throw err;
+                }
             });
 
             _outage = null;
@@ -97,5 +115,5 @@ app.get('/', function(req, res) {
 app.use(express.static('public'));
 
 app.listen(port, function () {
-    console.log('ISP logger is running on port '+port);
+    log('INFO ISP logger is running on port ' + port + ', checking google.com every ' + (checkInterval / 1000) + 's');
 });

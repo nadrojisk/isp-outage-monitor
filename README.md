@@ -33,3 +33,15 @@ docker compose up --build   # then open http://localhost:8080
 Released images are published to `ghcr.io/nadrojisk/isp-outage-monitor`. To cut a release, tag the commit
 on `master` (`git tag v1.0.1 && git push origin v1.0.1`); the *Publish image* workflow builds and pushes
 `1.0.1` and `1.0`. Outage data lives in `/usr/src/app/database`; mount a volume there to keep it.
+
+### Logs
+
+Every event is one line on stdout (`docker logs`), so log collectors such as Loki can pick it up:
+
+```
+2026-09-21T11:00:13.627Z OUTAGE began: no reply from google.com
+2026-09-21T11:02:21.803Z OUTAGE ended after 128s
+```
+
+The container also logs when it starts, the first successful check (`connection check running: online`), and
+`ERROR could not save the outage` if the database write fails.
