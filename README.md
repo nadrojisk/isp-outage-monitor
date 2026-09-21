@@ -36,12 +36,11 @@ on `master` (`git tag v1.0.1 && git push origin v1.0.1`); the *Publish image* wo
 
 ### Logs
 
-Every event is one line on stdout (`docker logs`), so log collectors such as Loki can pick it up:
+One JSON object per line on stdout (`docker logs`), so log collectors such as Loki can filter on fields:
 
 ```
-2026-09-21T11:00:13.627Z OUTAGE began: no reply from google.com
-2026-09-21T11:02:21.803Z OUTAGE ended after 128s
+{"time":"2026-09-21T11:00:13.627Z","level":"warn","msg":"outage began: no reply from google.com","event":"outage_began","target":"google.com"}
+{"time":"2026-09-21T11:02:21.803Z","level":"warn","msg":"outage ended after 128s","event":"outage_ended","duration_s":128}
 ```
 
-The container also logs when it starts, the first successful check (`connection check running: online`), and
-`ERROR could not save the outage` if the database write fails.
+`event` is one of `started`, `check_online` (first successful check), `outage_began`, `outage_ended` and `save_failed` (level `error`).
